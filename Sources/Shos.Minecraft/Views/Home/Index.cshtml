@@ -1,0 +1,13 @@
+@model Shos.Minecraft.Server.Models.GameHomeViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "_Layout";
+}
+
+<main class="game-shell">
+    <canvas id="@Model.CanvasId"></canvas>
+</main>
+
+@section Scripts {
+    <script type="module" src="~/js/game.js" asp-append-version="true"></script>
+}
