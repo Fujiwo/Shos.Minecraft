@@ -113,7 +113,7 @@ export const BlockTypes: readonly IBlockType[] = [
 ];
 
 export function getBlockType(id: number): IBlockType {
-    const blockType = BlockTypes[id];
+    const blockType = BlockTypes.find((candidate) => candidate.id === id);
     if (!blockType) {
         throw new Error(`Unknown block id: ${id}`);
     }
