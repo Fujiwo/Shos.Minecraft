@@ -1,0 +1,22 @@
+{
+  "name": "shos-minecraft-client",
+  "version": "1.0.0",
+  "description": "Shos.Minecraft client (TypeScript + Babylon.js)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babylonjs/core": "^9.21.2"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.2.1"
+  }
+}
