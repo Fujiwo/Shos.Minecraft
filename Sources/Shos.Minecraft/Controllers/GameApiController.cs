@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Shos.Minecraft.Server.Models;
+using Shos.Minecraft.Models;
 
-namespace Shos.Minecraft.Server.Controllers;
+namespace Shos.Minecraft.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -22,9 +22,9 @@ public class GameApiController : ControllerBase
     {
         return Ok(new GameWorldResponse
         {
-            WorldId = "default",
+            WorldId = Guid.Empty,
             Name = "Starter World",
-            Seed = "shos-minecraft"
+            Seed = 0
         });
     }
 }

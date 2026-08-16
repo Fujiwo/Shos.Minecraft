@@ -1,4 +1,4 @@
-namespace Shos.Minecraft.Server.Models;
+namespace Shos.Minecraft.Models;
 
 public class GameHomeViewModel
 {

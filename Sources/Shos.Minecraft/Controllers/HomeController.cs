@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Shos.Minecraft.Server.Models;
+using Shos.Minecraft.Models;
 
-namespace Shos.Minecraft.Server.Controllers;
+namespace Shos.Minecraft.Controllers;
 
 public class HomeController : Controller
 {
