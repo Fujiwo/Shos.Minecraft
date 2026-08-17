@@ -13,7 +13,8 @@
 
 - すべてのゲームロジック、画面表示、API、永続化は、単一の ASP.NET Core プロジェクト配下で構成する。`Client/` と `Server/` の分離プロジェクトは作らず、1つのアプリとして統合する。
 - html や CSS も通常の ASP.NET Core MVC プロジェクトの中で、`Views/` 配下の `cshtml` と `wwwroot/css` / `wwwroot/js` として表現する。画面は `HomeController` などの `Controller` から `View` を返し、静的アセットは同一プロジェクトの `wwwroot` に配置する。
-- MVC の責務は明確に分離し、`Controllers` が画面と API を担当し、`Models` がデータ契約、`Views` が画面 UI、`wwwroot` が CSS/JS/画像などの静的ファイルを扱う。
+- ブラウザ側のロジックは TypeScript(`.ts`)で実装し、素の `.js` を直接手書きしない。`Microsoft.TypeScript.MSBuild` により `dotnet build` 時に `wwwroot/js` 配下へコンパイルする。
+- MVC の責務は明確に分離し、`Controllers` が画面と API を担当し、`Models` がデータ契約、`Views` が画面 UI、`wwwroot` が CSS/TypeScript(コンパイル後のJS)/画像などの静的ファイルを扱う。
 - チャンクは `16 x 256 x 16` の `Uint8Array` で保持し、インデックス計算は `x + z * 16 + y * 16 * 16` を維持する。既定のブロックIDと水(ID 8)の非衝突・破壊不可の扱いを変更しない。
 - プレイヤー状態と変更済みチャンクは、`PUT /api/worlds/{id}/state` の単一トランザクションで同時に保存する。未編集チャンクは永続化しない。
 - APIの失敗応答は RFC 7807 `ProblemDetails` を使用し、存在しないリソースは404、入力不正は400、予期しないサーバーエラーは500を返す。
