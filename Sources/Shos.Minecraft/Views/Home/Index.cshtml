@@ -1,13 +1,8 @@
-@model Shos.Minecraft.Models.GameHomeViewModel
-@{
-    ViewData["Title"] = Model.Title;
-    Layout = "_Layout";
+﻿@{
+    ViewData["Title"] = "Home Page";
 }
 
-<main class="game-shell">
-    <canvas id="@Model.CanvasId"></canvas>
-</main>
-
-@section Scripts {
-    <script type="module" src="~/js/game.js" asp-append-version="true"></script>
-}
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div>

@@ -1,24 +1,25 @@
 using Microsoft.AspNetCore.Mvc;
 using Shos.Minecraft.Models;
+using System.Diagnostics;
 
-namespace Shos.Minecraft.Controllers;
-
-public class HomeController : Controller
+namespace Shos.Minecraft.Controllers
 {
-    public IActionResult Index()
+    public class HomeController : Controller
     {
-        var model = new GameHomeViewModel
+        public IActionResult Index()
         {
-            Title = "Shos.Minecraft",
-            CanvasId = "renderCanvas"
-        };
+            return View();
+        }
 
-        return View(model);
-    }
+        public IActionResult Privacy()
+        {
+            return View();
+        }
 
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View();
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error()
+        {
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
     }
 }
