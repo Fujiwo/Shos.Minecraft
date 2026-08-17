@@ -1,16 +1,34 @@
 // ブロックIDと属性の対応表(詳細システム設計書.Ver1.md 第2章 2.1 準拠)
-(function (root, factory) {
+
+interface IBlockType {
+    id: number;
+    name: string;
+    isCollidable: boolean;
+    isBreakable: boolean;
+    requiredTool: "none" | "woodenPickaxe";
+    breakTimeSeconds: number;
+    dropBlockId: number | null;
+}
+
+interface IBlockTypesModule {
+    BLOCK_TYPES: Readonly<Record<number, Readonly<IBlockType>>>;
+    getBlockType(blockId: number): IBlockType;
+    isCollidable(blockId: number): boolean;
+    isBreakable(blockId: number): boolean;
+}
+
+(function (root: typeof globalThis, factory: () => IBlockTypesModule): void {
     "use strict";
-    if (typeof module === "object" && module.exports) {
+    if (typeof module === "object" && module && module.exports) {
         module.exports = factory();
     } else {
-        root.ShosMinecraft = root.ShosMinecraft || {};
-        root.ShosMinecraft.BlockTypes = factory();
+        (root as any).ShosMinecraft = (root as any).ShosMinecraft || {};
+        (root as any).ShosMinecraft.BlockTypes = factory();
     }
-})(typeof self !== "undefined" ? self : this, function () {
+})(globalThis, function (): IBlockTypesModule {
     "use strict";
 
-    var BLOCK_TYPES = Object.freeze({
+    const BLOCK_TYPES: Readonly<Record<number, Readonly<IBlockType>>> = Object.freeze({
         0: Object.freeze({ id: 0, name: "空気", isCollidable: false, isBreakable: false, requiredTool: "none", breakTimeSeconds: 0, dropBlockId: null }),
         1: Object.freeze({ id: 1, name: "土", isCollidable: true, isBreakable: true, requiredTool: "none", breakTimeSeconds: 0.5, dropBlockId: 1 }),
         2: Object.freeze({ id: 2, name: "草(草ブロック)", isCollidable: true, isBreakable: true, requiredTool: "none", breakTimeSeconds: 0.5, dropBlockId: 1 }),
@@ -24,19 +42,19 @@
         10: Object.freeze({ id: 10, name: "作業台", isCollidable: true, isBreakable: true, requiredTool: "none", breakTimeSeconds: 0.5, dropBlockId: 10 })
     });
 
-    function getBlockType(blockId) {
-        var blockType = BLOCK_TYPES[blockId];
+    function getBlockType(blockId: number): IBlockType {
+        const blockType = BLOCK_TYPES[blockId];
         if (!blockType) {
             throw new RangeError("未定義のブロックIDです: " + blockId);
         }
         return blockType;
     }
 
-    function isCollidable(blockId) {
+    function isCollidable(blockId: number): boolean {
         return getBlockType(blockId).isCollidable;
     }
 
-    function isBreakable(blockId) {
+    function isBreakable(blockId: number): boolean {
         return getBlockType(blockId).isBreakable;
     }
 
