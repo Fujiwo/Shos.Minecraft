@@ -24,5 +24,10 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
+// 属性ルーティングのAPIコントローラー(GameApiControllerなど)を有効にする
+app.MapControllers();
 
 app.Run();
+
+// 統合テストからWebApplicationFactory<Program>で参照できるようにする
+public partial class Program { }
