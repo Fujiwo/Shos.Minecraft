@@ -16,7 +16,8 @@
             this.blocks = new Uint8Array(Chunk.BLOCK_COUNT); // 既定値0(空気)
         }
         static getIndex(x, y, z) {
-            if (x < 0 || x >= Chunk.SIZE_X || y < 0 || y >= Chunk.SIZE_Y || z < 0 || z >= Chunk.SIZE_Z) {
+            if (!Number.isInteger(x) || !Number.isInteger(y) || !Number.isInteger(z)
+                || x < 0 || x >= Chunk.SIZE_X || y < 0 || y >= Chunk.SIZE_Y || z < 0 || z >= Chunk.SIZE_Z) {
                 throw new RangeError("チャンク範囲外の座標です: (" + x + ", " + y + ", " + z + ")");
             }
             return x + z * Chunk.SIZE_X + y * Chunk.SIZE_X * Chunk.SIZE_Z;
@@ -25,6 +26,7 @@
             return this.blocks[Chunk.getIndex(x, y, z)];
         }
         setBlockId(x, y, z, blockId) {
+            BlockTypes.getBlockType(blockId);
             this.blocks[Chunk.getIndex(x, y, z)] = blockId;
         }
         // 空気・水(非衝突ブロック)の判定はBlockTypesの定義に委譲する

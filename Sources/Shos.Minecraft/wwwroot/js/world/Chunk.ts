@@ -40,7 +40,8 @@ interface IChunkStatic {
         }
 
         static getIndex(x: number, y: number, z: number): number {
-            if (x < 0 || x >= Chunk.SIZE_X || y < 0 || y >= Chunk.SIZE_Y || z < 0 || z >= Chunk.SIZE_Z) {
+            if (!Number.isInteger(x) || !Number.isInteger(y) || !Number.isInteger(z)
+                || x < 0 || x >= Chunk.SIZE_X || y < 0 || y >= Chunk.SIZE_Y || z < 0 || z >= Chunk.SIZE_Z) {
                 throw new RangeError("チャンク範囲外の座標です: (" + x + ", " + y + ", " + z + ")");
             }
             return x + z * Chunk.SIZE_X + y * Chunk.SIZE_X * Chunk.SIZE_Z;
@@ -51,6 +52,7 @@ interface IChunkStatic {
         }
 
         setBlockId(x: number, y: number, z: number, blockId: number): void {
+            BlockTypes.getBlockType(blockId);
             this.blocks[Chunk.getIndex(x, y, z)] = blockId;
         }
 

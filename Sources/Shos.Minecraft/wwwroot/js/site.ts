@@ -1,3 +1,1 @@
-"use strict";
 // 共通のブラウザ側ロジックはこのTypeScriptファイルへ追加する。
-//# sourceMappingURL=site.js.map

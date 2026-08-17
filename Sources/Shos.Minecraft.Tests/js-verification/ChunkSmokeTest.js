@@ -42,4 +42,15 @@ assert.throws(function () {
     chunk.setBlockId(16, 0, 0, 1);
 }, RangeError);
 
+// 座標は有限整数、ブロックIDは仕様で定義された値に限定されること
+assert.throws(function () {
+    Chunk.getIndex(0.5, 0, 0);
+}, RangeError);
+assert.throws(function () {
+    Chunk.getIndex(NaN, 0, 0);
+}, RangeError);
+assert.throws(function () {
+    chunk.setBlockId(0, 0, 0, 11);
+}, RangeError);
+
 console.log("ChunkSmokeTest: すべての検証に成功しました。");
