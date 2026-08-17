@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^node \"c:\\\\DropBox\\\\Dropbox\\\\Source\\\\GitHub\\\\Repos\\\\Shos\\.Minecraft\\\\Sources\\\\Shos\\.Minecraft\\.Tests\\\\js-verification\\\\ChunkSmokeTest\\.js\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}
