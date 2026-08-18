@@ -1,5 +1,5 @@
 // ゲーム画面(#game-canvas)の起動処理。実際の描画エンジン初期化は後続ステップで追加する。
-(function (): void {
+function main(): void {
     "use strict";
 
     function resizeCanvas(canvas: HTMLCanvasElement): void {
@@ -15,13 +15,13 @@
         }
 
         resizeCanvas(canvas);
-        window.addEventListener("resize", function () {
-            resizeCanvas(canvas);
-        });
+        window.addEventListener("resize", () => resizeCanvas(canvas));
 
         canvas.dataset.initialized = "true";
         console.info("game.js: ゲーム画面を初期化しました。");
     }
 
     document.addEventListener("DOMContentLoaded", initializeGame);
-})();
+}
+
+main();
