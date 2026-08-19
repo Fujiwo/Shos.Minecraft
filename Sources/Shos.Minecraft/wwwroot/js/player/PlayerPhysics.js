@@ -55,6 +55,18 @@
         }
         return 0;
     }
+    // X軸またはZ軸1軸のみを移動させ、移動先のAABBが衝突する場合は元の座標のまま留まらせる
+    // (水ブロックはisCollidableAtがfalseのため衝突判定から自然に除外される)。
+    // 呼び出し側は、もう一方の軸(isXAxisがtrueならz、falseならx)には直前の判定で確定済みの最新座標を渡すこと
+    // (X軸→Z軸の順で1軸ずつ判定するため、Z軸判定にはX軸移動後のxを用いる元の実装の挙動を踏襲している)。
+    function tryMoveHorizontalAxis(chunk, halfWidth, y, height, x, z, isXAxis, delta) {
+        const newX = isXAxis ? x + delta : x;
+        const newZ = isXAxis ? z : z + delta;
+        if (aabbCollides(chunk, newX - halfWidth, newX + halfWidth, y, y + height, newZ - halfWidth, newZ + halfWidth)) {
+            return isXAxis ? x : z;
+        }
+        return isXAxis ? newX : newZ;
+    }
     function stepPlayer(chunk, state, input, deltaSeconds) {
         const halfWidth = PLAYER_HALF_WIDTH;
         const height = PLAYER_HEIGHT;
@@ -98,16 +110,9 @@
             moveX = (moveX / moveLength) * MOVE_SPEED * deltaSeconds;
             moveZ = (moveZ / moveLength) * MOVE_SPEED * deltaSeconds;
         }
-        // X軸移動(水ブロックはisCollidableAtがfalseのため衝突判定から自然に除外される)
-        const newX = x + moveX;
-        if (!aabbCollides(chunk, newX - halfWidth, newX + halfWidth, y, y + height, z - halfWidth, z + halfWidth)) {
-            x = newX;
-        }
-        // Z軸移動
-        const newZ = z + moveZ;
-        if (!aabbCollides(chunk, x - halfWidth, x + halfWidth, y, y + height, newZ - halfWidth, newZ + halfWidth)) {
-            z = newZ;
-        }
+        // X軸移動・Z軸移動を1軸ずつ判定する(片方の衝突がもう片方の移動を妨げないようにするため)
+        x = tryMoveHorizontalAxis(chunk, halfWidth, y, height, x, z, true, moveX);
+        z = tryMoveHorizontalAxis(chunk, halfWidth, y, height, x, z, false, moveZ);
         // Y軸移動(重力・ジャンプによる上下移動と着地・天井衝突の解決)
         const deltaY = vy * deltaSeconds;
         const newY = y + deltaY;
