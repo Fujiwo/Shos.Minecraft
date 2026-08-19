@@ -22,10 +22,10 @@ public class GameApiChunkTests : IClassFixture<WebApplicationFactory<Program>>
         var client = _factory.CreateClient();
         var worldId = Guid.NewGuid();
 
-        var response = await client.GetAsync($"/api/worlds/{worldId}/chunks?x=1&y=0&z=2");
+        var response = await client.GetAsync($"/api/worlds/{worldId}/chunks?x=1&y=0&z=2", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var dto = await response.Content.ReadFromJsonAsync<ChunkSaveRequestDto>();
+        var dto = await response.Content.ReadFromJsonAsync<ChunkSaveRequestDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(dto);
         Assert.Equal(1, dto!.ChunkX);
         Assert.Equal(0, dto.ChunkY);
@@ -46,11 +46,11 @@ public class GameApiChunkTests : IClassFixture<WebApplicationFactory<Program>>
         var client = _factory.CreateClient();
         var worldId = Guid.NewGuid();
 
-        var first = await client.GetAsync($"/api/worlds/{worldId}/chunks?x=0&y=0&z=0");
-        var second = await client.GetAsync($"/api/worlds/{worldId}/chunks?x=0&y=0&z=0");
+        var first = await client.GetAsync($"/api/worlds/{worldId}/chunks?x=0&y=0&z=0", TestContext.Current.CancellationToken);
+        var second = await client.GetAsync($"/api/worlds/{worldId}/chunks?x=0&y=0&z=0", TestContext.Current.CancellationToken);
 
-        var firstDto = await first.Content.ReadFromJsonAsync<ChunkSaveRequestDto>();
-        var secondDto = await second.Content.ReadFromJsonAsync<ChunkSaveRequestDto>();
+        var firstDto = await first.Content.ReadFromJsonAsync<ChunkSaveRequestDto>(TestContext.Current.CancellationToken);
+        var secondDto = await second.Content.ReadFromJsonAsync<ChunkSaveRequestDto>(TestContext.Current.CancellationToken);
 
         Assert.Equal(firstDto!.BlockData, secondDto!.BlockData);
     }
@@ -61,7 +61,19 @@ public class GameApiChunkTests : IClassFixture<WebApplicationFactory<Program>>
         var client = _factory.CreateClient();
         var worldId = Guid.NewGuid();
 
-        var response = await client.GetAsync($"/api/worlds/{worldId}/chunks?x=0&y=1&z=0");
+        var response = await client.GetAsync($"/api/worlds/{worldId}/chunks?x=0&y=1&z=0", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task GetChunk_TooLargeCoordinates_ReturnsBadRequestProblemDetails()
+    {
+        var client = _factory.CreateClient();
+        var worldId = Guid.NewGuid();
+
+        var response = await client.GetAsync($"/api/worlds/{worldId}/chunks?x={int.MaxValue}&y=0&z=0", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);

@@ -28,6 +28,16 @@ public static class TerrainGenerator
     const byte BlockSand  = 9;
 
     // シード値・チャンク座標が同一であれば常に同一のブロック配列を返す(再現性の要件)
+    public static bool IsSafeChunkCoordinate(int chunkCoordinate)
+    {
+        long minWorldCoordinate = int.MinValue;
+        long maxWorldCoordinate = int.MaxValue;
+        long minCandidate = (long)chunkCoordinate * ChunkSizeX;
+        long maxCandidate = minCandidate + ChunkSizeX - 1;
+
+        return minCandidate >= minWorldCoordinate && maxCandidate <= maxWorldCoordinate;
+    }
+
     public static byte[] GenerateChunkBlocks(int seed, int chunkX, int chunkZ)
     {
         var noise = new PerlinNoise2D(seed);
@@ -35,8 +45,8 @@ public static class TerrainGenerator
 
         for (int lz = 0; lz < ChunkSizeZ; lz++) {
             for (int lx = 0; lx < ChunkSizeX; lx++) {
-                int worldX = chunkX * ChunkSizeX + lx;
-                int worldZ = chunkZ * ChunkSizeZ + lz;
+                int worldX = checked(chunkX * ChunkSizeX + lx);
+                int worldZ = checked(chunkZ * ChunkSizeZ + lz);
                 int surfaceY = CalculateSurfaceHeight(noise, worldX, worldZ);
 
                 for (int y = 0; y < ChunkSizeY; y++) {

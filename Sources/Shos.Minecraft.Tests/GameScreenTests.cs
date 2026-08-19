@@ -17,8 +17,8 @@ public class GameScreenTests : IClassFixture<WebApplicationFactory<Program>>
     {
         var client = _factory.CreateClient();
 
-        var response = await client.GetAsync("/");
-        var html = await response.Content.ReadAsStringAsync();
+        var response = await client.GetAsync("/", TestContext.Current.CancellationToken);
+        var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("id=\"game-canvas\"", html);
@@ -30,7 +30,7 @@ public class GameScreenTests : IClassFixture<WebApplicationFactory<Program>>
     public async Task GetApiGameStatus_ReturnsOk()
     {
         var client = _factory.CreateClient();
-        var response = await client.GetAsync("/api/game/status");
+        var response = await client.GetAsync("/api/game/status", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }

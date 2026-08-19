@@ -26,6 +26,13 @@ public class GameApiController : ControllerBase
                 detail: "y は 0 のみ有効です(1チャンクがワールド高さ全体を管理するため)。");
         }
 
+        if (!TerrainGenerator.IsSafeChunkCoordinate(x) || !TerrainGenerator.IsSafeChunkCoordinate(z)) {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "無効なチャンク座標です。",
+                detail: "x / z は int32 のワールド座標範囲内である必要があります。チャンク境界を超える数値は受け付けません。");
+        }
+
         // 暫定措置: WorldIdからSeedを決定的に導出する(ステップ8でWorlds永続化に置き換え予定)
         int seed = WorldSeedProvider.DeriveSeedFromWorldId(id);
         byte[] blocks = TerrainGenerator.GenerateChunkBlocks(seed, x, z);
