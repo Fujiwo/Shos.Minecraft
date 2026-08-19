@@ -60,8 +60,11 @@ function main() {
         return __awaiter(this, void 0, void 0, function* () {
             const worldClient = window.ShosMinecraft.WorldClient;
             const fetched = yield worldClient.fetchChunk(worldId, x, y, z);
-            const meshData = yield requestChunkMesh(fetched.chunk.blocks);
+            // requestChunkMeshはTransferableとしてblocksのバッファをWorkerへ譲渡し呼び出し元の配列を空にするため、
+            // 衝突判定(ステップ5)で再利用するfetched.chunk.blocksとは別のコピーを渡す。
+            const meshData = yield requestChunkMesh(fetched.chunk.blocks.slice());
             createChunkMesh(scene, meshData, fetched.chunkX, fetched.chunkZ);
+            return fetched.chunk;
         });
     }
     function initializeGame() {
@@ -78,17 +81,25 @@ function main() {
         }
         const engine = new babylon.Engine(canvas, true);
         const scene = new babylon.Scene(engine);
-        // FPSカメラ・移動・衝突の本実装はステップ5の対象。ここではチャンク描画確認用の最小限のカメラ・光源のみ配置する。
-        const camera = new babylon.UniversalCamera("devCamera", new babylon.Vector3(8, 96, -16), scene);
-        camera.setTarget(new babylon.Vector3(8, 64, 8));
-        camera.attachControl(canvas, true);
+        // チャンク読み込み完了まで画面が真っ黒にならないよう、一時的なカメラを配置する。
+        // 読み込み完了後、プレイヤー操作可能なFPSカメラ(PlayerController)へ切り替える。
+        const loadingCamera = new babylon.UniversalCamera("loadingCamera", new babylon.Vector3(8, 96, -16), scene);
+        loadingCamera.setTarget(new babylon.Vector3(8, 64, 8));
+        scene.activeCamera = loadingCamera;
         new babylon.HemisphericLight("light", new babylon.Vector3(0, 1, 0), scene);
         engine.runRenderLoop(() => scene.render());
         window.addEventListener("resize", () => {
             resizeCanvas(canvas);
             engine.resize();
         });
-        loadAndRenderChunk(scene, DEV_PLACEHOLDER_WORLD_ID, 0, 0, 0).catch((error) => {
+        loadAndRenderChunk(scene, DEV_PLACEHOLDER_WORLD_ID, 0, 0, 0).then((chunk) => {
+            // 仕様書にスポーンX/Z座標の決定方法が未定義のため、読み込み済みチャンクの中央付近を
+            // ローカルの暫定スポーン位置とする(ワールド作成・初期スポーン地点の永続化はステップ8の対象)。
+            const playerController = window.ShosMinecraft.PlayerController;
+            const controller = playerController.createPlayerController(scene, canvas, chunk, 8, 8);
+            scene.activeCamera = controller.camera;
+            loadingCamera.dispose();
+        }).catch((error) => {
             console.error("game.js: チャンクの取得・描画に失敗しました。", error);
         });
         canvas.dataset.initialized = "true";
