@@ -6,76 +6,73 @@ using Shos.Minecraft.Models;
 using Shos.Minecraft.Terrain;
 using Xunit;
 
-namespace Shos.Minecraft.Tests
+namespace Shos.Minecraft.Tests;
+
+// ステップ4の完了条件「APIからチャンクデータを取得し画面に反映できること」を、実際のHTTP応答で検証する
+public class GameApiChunkTests : IClassFixture<WebApplicationFactory<Program>>
 {
-    // ステップ4の完了条件「APIからチャンクデータを取得し画面に反映できること」を、実際のHTTP応答で検証する
-    public class GameApiChunkTests : IClassFixture<WebApplicationFactory<Program>>
+    readonly WebApplicationFactory<Program> _factory;
+
+    public GameApiChunkTests(WebApplicationFactory<Program> factory)
+        => _factory = factory;
+
+    [Fact]
+    public async Task GetChunk_ReturnsOkAndBlockDataConsistentWithIndexFormula()
     {
-        private readonly WebApplicationFactory<Program> _factory;
+        var client = _factory.CreateClient();
+        var worldId = Guid.NewGuid();
 
-        public GameApiChunkTests(WebApplicationFactory<Program> factory)
-        {
-            _factory = factory;
-        }
+        var response = await client.GetAsync($"/api/worlds/{worldId}/chunks?x=1&y=0&z=2");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        [Fact]
-        public async Task GetChunk_ReturnsOkAndBlockDataConsistentWithIndexFormula()
-        {
-            var client = _factory.CreateClient();
-            var worldId = Guid.NewGuid();
+        var dto = await response.Content.ReadFromJsonAsync<ChunkSaveRequestDto>();
+        Assert.NotNull(dto);
+        Assert.Equal(1, dto!.ChunkX);
+        Assert.Equal(0, dto.ChunkY);
+        Assert.Equal(2, dto.ChunkZ);
 
-            var response = await client.GetAsync($"/api/worlds/{worldId}/chunks?x=1&y=0&z=2");
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        byte[] decompressed = Decompress(dto.BlockData);
+        Assert.Equal(16 * 256 * 16, decompressed.Length);
 
-            var dto = await response.Content.ReadFromJsonAsync<ChunkSaveRequestDto>();
-            Assert.NotNull(dto);
-            Assert.Equal(1, dto!.ChunkX);
-            Assert.Equal(0, dto.ChunkY);
-            Assert.Equal(2, dto.ChunkZ);
+        // 同一WorldIdから決定的に導出したSeedによる地形生成結果と、API応答が一致すること(座標系 x + z*16 + y*16*16 の整合性を含む)
+        int expectedSeed = WorldSeedProvider.DeriveSeedFromWorldId(worldId);
+        byte[] expectedBlocks = TerrainGenerator.GenerateChunkBlocks(expectedSeed, chunkX: 1, chunkZ: 2);
+        Assert.Equal(expectedBlocks, decompressed);
+    }
 
-            byte[] decompressed = Decompress(dto.BlockData);
-            Assert.Equal(16 * 256 * 16, decompressed.Length);
+    [Fact]
+    public async Task GetChunk_SameWorldIdRequestedTwice_ReturnsIdenticalTerrain()
+    {
+        var client = _factory.CreateClient();
+        var worldId = Guid.NewGuid();
 
-            // 同一WorldIdから決定的に導出したSeedによる地形生成結果と、API応答が一致すること(座標系 x + z*16 + y*16*16 の整合性を含む)
-            int expectedSeed = WorldSeedProvider.DeriveSeedFromWorldId(worldId);
-            byte[] expectedBlocks = TerrainGenerator.GenerateChunkBlocks(expectedSeed, chunkX: 1, chunkZ: 2);
-            Assert.Equal(expectedBlocks, decompressed);
-        }
+        var first = await client.GetAsync($"/api/worlds/{worldId}/chunks?x=0&y=0&z=0");
+        var second = await client.GetAsync($"/api/worlds/{worldId}/chunks?x=0&y=0&z=0");
 
-        [Fact]
-        public async Task GetChunk_SameWorldIdRequestedTwice_ReturnsIdenticalTerrain()
-        {
-            var client = _factory.CreateClient();
-            var worldId = Guid.NewGuid();
+        var firstDto = await first.Content.ReadFromJsonAsync<ChunkSaveRequestDto>();
+        var secondDto = await second.Content.ReadFromJsonAsync<ChunkSaveRequestDto>();
 
-            var first = await client.GetAsync($"/api/worlds/{worldId}/chunks?x=0&y=0&z=0");
-            var second = await client.GetAsync($"/api/worlds/{worldId}/chunks?x=0&y=0&z=0");
+        Assert.Equal(firstDto!.BlockData, secondDto!.BlockData);
+    }
 
-            var firstDto = await first.Content.ReadFromJsonAsync<ChunkSaveRequestDto>();
-            var secondDto = await second.Content.ReadFromJsonAsync<ChunkSaveRequestDto>();
+    [Fact]
+    public async Task GetChunk_NonZeroY_ReturnsBadRequestProblemDetails()
+    {
+        var client = _factory.CreateClient();
+        var worldId = Guid.NewGuid();
 
-            Assert.Equal(firstDto!.BlockData, secondDto!.BlockData);
-        }
+        var response = await client.GetAsync($"/api/worlds/{worldId}/chunks?x=0&y=1&z=0");
 
-        [Fact]
-        public async Task GetChunk_NonZeroY_ReturnsBadRequestProblemDetails()
-        {
-            var client = _factory.CreateClient();
-            var worldId = Guid.NewGuid();
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
 
-            var response = await client.GetAsync($"/api/worlds/{worldId}/chunks?x=0&y=1&z=0");
-
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
-        }
-
-        private static byte[] Decompress(byte[] compressed)
-        {
-            using var input = new MemoryStream(compressed);
-            using var gzip = new GZipStream(input, CompressionMode.Decompress);
-            using var output = new MemoryStream();
-            gzip.CopyTo(output);
-            return output.ToArray();
-        }
+    static byte[] Decompress(byte[] compressed)
+    {
+        using var input = new MemoryStream(compressed);
+        using var gzip = new GZipStream(input, CompressionMode.Decompress);
+        using var output = new MemoryStream();
+        gzip.CopyTo(output);
+        return output.ToArray();
     }
 }
